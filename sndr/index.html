@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" data-cast-api-enabled="true">
+	<head>
+		<script src="http://www.google.com/jsapi"></script>
+		 <script type="text/javascript" src="https://apis.google.com/js/api.js"></script>
+
+		<script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+		<script type="text/javascript" src="https://www.dropbox.com/static/api/1/dropins.js" id="dropboxjs" data-app-key="qxipvzh4wn35ley"></script>
+
+		<script src="default.js"></script>
+
+		<script type="text/javascript">
+			//var APP_ID = "619505613225.apps.googleusercontent.com";
+			var APP_ID = "619505613225";
+			var OAUTH_TOKEN = "ybh9_3PK29gyOPAhMAQj3nHG";
+			
+			var CLIENT_ID = APP_ID;
+			var SCOPES = "https://www.googleapis.com/auth/drive";
+
+		 	function gauth() {
+		 		gapi.auth.authorize(
+            		{
+            			'client_id': CLIENT_ID,
+            			'scope': SCOPES,
+            			'immediate': true
+            		},
+            		handleAuthResult
+            	);
+            	console.log("Called gauth");
+		 	}
+
+		 	function handleAuthResult(authResult) {
+		 		console.log("auth result", authResult);
+				var authButton = document.getElementById('authorizeButton');
+				var filePicker = document.getElementById('filePicker');
+				
+				if (authResult && !authResult.error) {
+					console.log("authorized!");
+				  // Access token has been successfully retrieved, requests can be sent to the API.
+
+					gapi.client.load('drive', 'v2', {});
+				  
+				} else {
+					console.log("authorizing!");
+					// No access token could be retrieved, show the button to start the authorization flow.
+
+						gapi.auth.authorize(
+							{ 'client_id': CLIENT_ID, 'scope': SCOPES, 'immediate': false },
+							handleAuthResult
+						);
+
+					}
+			}
+
+			// Use the Google Loader script to load the google.picker script.
+			google.load('picker', '1', {});
+
+			// Create and render a Picker object for searching images.
+			function createPicker() {
+				var view = new google.picker.View(google.picker.ViewId.DOCS);
+				view.setMimeTypes("video/x-matroska,video/mp4");
+
+				var picker = new google.picker.PickerBuilder()
+					.enableFeature(google.picker.Feature.NAV_HIDDEN)
+					.setAppId(APP_ID)
+					.setOAuthToken(OAUTH_TOKEN)
+					.addView(view)
+					.setCallback(pickerCallback)
+					.build();
+
+				picker.setVisible(true);
+			}
+
+			// A simple callback implementation.
+			function pickerCallback(data) {
+				console.log(data);
+				var url = 'nothing';
+				if (data[google.picker.Response.ACTION] == google.picker.Action.PICKED) {
+					var doc = data[google.picker.Response.DOCUMENTS][0];
+					url = doc[google.picker.Document.URL];
+				}
+				if (url != 'nothing') {
+					printFile(data.docs[0].id);
+				}
+			}
+
+			function printFile(fileId) {
+				var request = gapi.client.drive.files.get({
+					'fileId': fileId
+				});
+				request.execute(function(file) {
+					console.log(file);
+
+					playDriveFile(file);
+				});
+			}
+
+			function init() {
+				gapi.load('auth:client', gauth);
+			}
+
+			setTimeout(init, 1000);
+		</script>
+	</head>
+	<body>
+		I'M THE SENDER.<br/>
+
+		<div id="buttons">
+			<button id="button0">Open Receiver</button>
+			<button id="button1">Close Receiver</button><br/>
+		</div>
+
+		<input id="db-chooser" data-link-type="direct" type="dropbox-chooser" name="selected-file" style="visibility: hidden;"/><br/>
+
+		<a id="link0" href="#">Play blob</a>
+
+		<a id="link1" href="#">Play from Drive</a>
+	</body>
+</html>

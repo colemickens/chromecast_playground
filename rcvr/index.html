@@ -1,0 +1,32 @@
+<html data-cast-api-enabled=”true”>
+	<head>
+		<script src="https://www.gstatic.com/cast/js/receiver/1.0/cast_receiver.js"></script>
+
+		<script type="text/javascript">
+			var receiver = new cast.receiver.Receiver(
+			    'cb202d13-45e5-4a2f-8516-b8dab5120a78', [cast.receiver.RemoteMedia.NAMESPACE],
+			    "",
+			    5);
+			var remoteMedia = new cast.receiver.RemoteMedia();
+			remoteMedia.addChannelFactory(
+			    receiver.createChannelFactory(cast.receiver.RemoteMedia.NAMESPACE));
+
+			receiver.start();
+
+			window.addEventListener('load', function() {
+			  var elem = document.getElementById('video0');
+			  remoteMedia.setMediaElement(elem);
+			});
+		</script>
+
+		<style type="text/css">
+			* {
+				padding: 0px;
+				margin: 0px;
+			}
+		</style>
+	</head>
+	<body>
+		<video id="video0" style="position:absolute;top:0;left:0;height:100%;width:100%" />
+	</body>
+</html>

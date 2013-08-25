@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en" data-cast-api-enabled="true">
+	<head>
+		<script src="http://www.google.com/jsapi"></script>
+		 <script type="text/javascript" src="https://apis.google.com/js/api.js"></script>
+
+		<script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+		<script type="text/javascript" src="https://www.dropbox.com/static/api/1/dropins.js" id="dropboxjs" data-app-key="qxipvzh4wn35ley"></script>
+
+		<script type="text/javascript">
+		$(document).ready(function() {
+			$("#button0").click(function() {
+				initializeApi();
+			});
+
+			$("#button1").click(function() {
+				stopPlayback();
+			});
+			$("#link0").click(function() {
+				var dbFile = {
+					link: "https://dl.dropboxusercontent.com/1/view/pzyxf7128b84zkj/Media/Nasa%20Tv%20Spot.mp4",
+					title: "Nasa Tv Spot.mp4"
+				};
+				playDropboxFile(dbFile);
+			});
+
+			$("#link1").click(function() {
+				var drFile = {
+					webContentLink: "https://docs.google.com/uc?id=0B79QASMcmTJceURiY3NHeWstQWc&export=download",
+					title: "Nasa Tv Spot.mp4"
+				}; 
+				playDriveFile(drFile);
+			});
+
+			playDropboxFile = function(dbFile) {
+				playVideo(dbFile.link, {}, true, dbFile.name);
+			};
+
+			playDriveFile = function(drFile) {
+				playVideo(drFile.webContentLink, {}, true, drFile.title);
+				//playVideo(drFile.downloadUrl, {}, true, drFile.title);
+			};
+
+			playVideo = function(url, contentInfo, autoplay, title) {
+				var request = new cast.MediaLoadRequest(url);
+				request.contentInfo = contentInfo;
+				request.autoplay = autoplay;
+				request.title = title;
+				console.log("loadMedia:", request);
+				cast_api.loadMedia(cv_activity.activityId, request, mediaLoaded);
+				console.log("post load media");
+			};
+
+
+
+
+
+
+
+
+
+
+
+			window.addEventListener("message", function(event) {
+				if (event.source == window && event.data && 
+					event.data.source == "CastApi" &&
+					event.data.event == "Hello")
+				{
+					console.log("removing attribute...");
+					initialized = true;
+					$("#button0").removeAttr("disabled");
+				}
+			});
+
+
+			initializeApi = function() {
+				console.log("initializing");
+				cast_api = new cast.Api();
+				cast_api.addReceiverListener("cb202d13-45e5-4a2f-8516-b8dab5120a78", onReceiverList);
+			};
+
+			onReceiverList = function(list) {
+				// If the list is non-empty, show a widget with
+				// the friendly names of receivers.
+				// When a receiver is picked, invoke doLaunch with the receiver.
+				console.log(list);
+				if(list.length > 0) {
+					doLaunch(list[0]);
+					receiver = list[0];
+				}
+			};
+
+			doLaunch = function(receiver) {
+				var request = new cast.LaunchRequest("cb202d13-45e5-4a2f-8516-b8dab5120a78", receiver);
+				request.parameters = "v=abcdefg";
+				request.description = new cast.LaunchDescription();
+				request.description.text = "My Cat Video";
+				request.description.url = "...";
+				cast_api.launch(request, onLaunch);
+			};
+
+			onLaunch = function(activity) {
+				if (activity.status == "running") {
+					cv_activity = activity;
+					console.log("running");
+				// update UI to reflect that the receiver has received the
+				// launch command and should start video playback.
+				} else if (activity.status == "error") {
+					cv_activity = null;
+					console.log("error");
+					console.log(activity);
+				}
+			};
+
+			mediaLoaded = function(stuff) {
+				console.log("mediaLoaded callback:", stuff);
+
+				request = cast.MediaPlayRequest();
+				cast_api.playMedia(cv_activity.activityId, request, mediaPlaying);
+			}
+
+			mediaPlaying = function(stuff) {
+				console.log("mediaPlaying callback:", stuff);
+			}
+
+			stopPlayback = function() {
+				if (cv_activity) {
+					cast_api.stopActivity(cv_activity.activityId, function() {});
+				}
+			};
+		});
+		</script>
+	</head>
+	<body>
+		<button id="button0" disabled>Open Receiver</button>
+		<button id="button1">Close Receiver</button><br/>
+
+		<a id="link0" href="#">Play from Dropbox</a>
+		<a id="link1" href="#">Play from Drive</a>
+	</body>
+</html>
